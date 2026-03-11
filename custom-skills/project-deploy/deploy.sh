@@ -145,13 +145,15 @@ generate_report() {
     
     # 获取 Git 信息
     local commit_hash=$(git rev-parse HEAD)
+    local short_hash=$(echo "$commit_hash" | cut -c1-7)
     local commit_msg=$(git log -1 --pretty=%B)
-    local remote_url=$(git remote get-url origin | sed 's|https://github.com/||' | sed 's|\.git||')
     
     # 获取备份文件信息
     local backup_file=$(ls -t backups/nanobot-custom-*.tar.gz 2>/dev/null | head -1)
+    local backup_name=""
     local backup_size="N/A"
     if [[ -f "$backup_file" ]]; then
+        backup_name=$(basename "$backup_file")
         backup_size=$(du -h "$backup_file" | cut -f1)
     fi
     
@@ -166,8 +168,8 @@ generate_report() {
 
 | 项目 | 值 |
 |------|-----|
-| 提交哈希 | \`$commit_hash:0:7\` |
-| 提交信息 | $commit_msg |
+| 提交哈希 | \`$short_hash\` |
+| 提交信息 | ${commit_msg%%$'\n'*} |
 | 测试分支 | $TEST_BRANCH (在 GitHub 查看) |
 | 标签 | v${TIMESTAMP_DATE}-${TIMESTAMP_TIME} |
 
@@ -175,9 +177,9 @@ generate_report() {
 
 | 项目 | 值 |
 |------|-----|
-| 文件名 | \$(basename "$backup_file") |
+| 文件名 | $backup_name |
 | 文件大小 | ${backup_size} |
-| 文件路径 | \`backups/\$(basename "$backup_file")\` |
+| 文件路径 | \`backups/$backup_name\` |
 | 远程存储 | 本地存档（超过 100MB，未推送到 GitHub） |
 
 ## 部署步骤
