@@ -1,254 +1,319 @@
-# Project Deploy Skill 📦
+# Project Deploy Skill 🔒
 
-**自动化项目部署工具 - 自动创建测试分支、生成分发包、推送到 GitHub**
+**一个完整的技能，用于将 nanobot-custom 项目进行安全检查并部署到 GitHub。**
 
 ## 🎯 功能
 
-每次运行时自动完成：
-1. ✅ **检查工作区状态** - 自动提交未保存的更改
-2. ✅ **创建测试分支** - 格式：`test-YYYYMMDD-HHMM`
-3. ✅ **生成分发包** - 排除 `.git/`、`venv/` 等开发文件
-4. ✅ **记录分发包位置** - 本地存档（超过 100MB 不推送）
-5. ✅ **推送到 GitHub** - 推送到新的测试分支
-6. ✅ **创建 Git 标签** - 格式：`vYYYYMMDD-HHMM`
-7. ✅ **生成部署报告** - 包含所有部署细节
+这个 Skill 会：
+1. ✅ **自动安全检查**（敏感信息扫描、文件验证）
+2. ✅ 创建测试分支
+3. ✅ 提交并推送到 GitHub
+4. ✅ 创建 Git 标签
+5. ✅ 生成部署报告
 
-## 🚀 使用方法
+**⚠️ 不再创建分发包（tar.gz）** - 直接使用 Git 进行版本控制
 
-### 快速部署（推荐）
+## 📋 使用流程
 
-```bash
-cd /path/to/nanobot-custom
-./custom-skills/project-deploy/deploy.sh
-```
-
-**一键完成所有操作**：
-- 自动创建测试分支
-- 创建分发包到 `backups/` 目录（本地存档）
-- 推送到远程测试分支
-- 创建 Git 标签
-- 生成部署报告
-
-### 仅创建分发包
+### 快速部署
 
 ```bash
-./custom-skills/project-deploy/create-backup.sh
+cd /home/yl/.nanobot/workspace/nanobot-custom
+./deploy.sh
 ```
 
-**仅生成分发包**（不推送）：
-- 创建 `backups/nanobot-custom-YYYYMMDD-HHMM.tar.gz`
-- 排除敏感文件和开发依赖
+### 手动部署
 
-### 回滚/管理版本
+#### 步骤 1: 运行安全检查
 
 ```bash
-./custom-skills/project-deploy/rollback.sh
+./deploy.sh --check-only
 ```
 
-**交互式菜单**：
-- 列出所有测试分支
-- 列出所有 Git 标签
-- 回滚到指定分支/标签
-- 删除测试分支
+#### 步骤 2: 查看检查结果
 
-**命令行参数**：
+检查以下项目：
+- 🔐 敏感信息扫描
+- 📁 文件完整性验证
+- 📦 依赖配置检查
+- 🌿 Git 状态验证
+
+#### 步骤 3: 执行部署
+
 ```bash
-# 列出测试分支
-./rollback.sh --list-branches
-
-# 列出标签
-./rollback.sh --list-tags
-
-# 回滚到分支
-./rollback.sh --to-branch test-20260312-0830
-
-# 回滚到标签
-./rollback.sh --to-tag v20260312-0830
-
-# 删除分支
-./rollback.sh --delete test-20260312-0830
-
-# 显示帮助
-./rollback.sh --help
+./deploy.sh
 ```
 
-## 📋 部署流程详解
+#### 步骤 4: 查看部署报告
 
-```
-1. check_git_status()
-   └── 检查未提交更改，自动提交
-
-2. create_test_branch()
-   └── 创建 test-YYYYMMDD-HHMM 分支
-
-3. create_distribution_package()
-   └── 调用 create-backup.sh
-   └── 生成 backups/nanobot-custom-*.tar.gz
-
-4. note_backup_location()
-   └── 记录分发包位置（超过 100MB 不推送）
-
-5. push_to_github()
-   └── 推送到远程测试分支
-
-6. create_tag()
-   └── 创建 vYYYYMMDD-HHMM 标签
-
-7. generate_report()
-   └── 生成 DEPLOYMENT_REPORT_*.md
+```bash
+cat DEPLOYMENT_REPORT.md
 ```
 
-## 📦 分发包内容
+## 🔍 安全检查内容
 
-### ✅ 包含的文件
-- `install.sh` - 完整安装脚本
-- `start-nanobot.sh` - 交互式启动脚本
-- `README.md` - 项目说明
-- `pyproject.toml` - Python 依赖配置
-- `nanobot/` - 核心代码（含所有修改）
-- `custom-skills/` - 4 个自定义 Skills
-- `web-channel/` - Web 界面
-- 所有文档和配置文件
+### 1. 敏感信息扫描
 
-### ❌ 排除的文件
-- `.git/` - Git 历史
-- `venv/`, `env/` - 虚拟环境
-- `__pycache__/`, `*.pyc` - 缓存文件
-- `*.log` - 日志文件
-- `config.json`, `.env` - 敏感配置
-- `backups/` - 备份目录
+自动扫描以下内容：
 
-## ⚠️ 重要说明
+```bash
+# 检查硬编码的 token 和密钥
+grep -r "ghp_\|github_pat_\|xoxb_\|discord_bot_token\|sk-[^a-z0-9]" \
+  --include="*.sh" --include="*.py" --include="*.json" \
+  --include="*.yaml" --include="*.yml" . 2>/dev/null
 
-### 文件大小限制
+# 检查 .env 文件
+find . -name ".env*" -type f 2>/dev/null
 
-GitHub 对单个文件有限制（100MB），因此：
-- ✅ 分发包作为**本地存档**保存在 `backups/` 目录
-- ✅ 测试分支和标签会推送到 GitHub
-- ✅ 部署报告会推送到 GitHub
-- ❌ 分发包**不会**推送到 GitHub
+# 检查 config.json
+find . -name "config.json" -type f 2>/dev/null
+```
 
-如需远程备份分发包，请：
-- 上传到云存储（Google Drive, Dropbox 等）
-- 发布到 GitHub Releases
-- 使用 Git LFS（需要配置）
+**如果发现敏感信息**：
+- ❌ 停止部署
+- 📝 显示警告
+- 🔐 建议立即删除
+
+### 2. 文件完整性验证
+
+确保以下文件存在：
+
+```bash
+# 核心文件
+✅ install.sh
+✅ start-nanobot.sh
+✅ README.md
+✅ pyproject.toml
+✅ .gitignore
+
+# 核心目录
+✅ custom-skills/
+✅ web-channel/
+✅ nanobot/
+```
+
+### 3. .gitignore 验证
+
+确保 `.gitignore` 包含：
+
+```
+# 虚拟环境
+venv/
+.venv/
+env/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# 配置和密钥
+.env
+.env.*
+config.json
+secrets.json
+
+# 日志
+*.log
+
+# 打包文件
+backups/
+*.tar.gz
+*.zip
+
+# IDE
+.idea/
+.vscode/
+*.swp
+```
+
+### 4. Git 状态验证
+
+```bash
+# 检查是否有未提交的更改
+git status
+
+# 检查远程仓库
+git remote -v
+
+# 检查当前分支
+git branch --show-current
+```
+
+## 🚀 自动化部署脚本
+
+### deploy.sh 功能
+
+```bash
+#!/bin/bash
+
+# 1. 安全检查阶段
+   ├─ 敏感信息扫描
+   ├─ 文件完整性检查
+   ├─ .gitignore 验证
+   └─ Git 状态验证
+
+# 2. 部署准备阶段
+   ├─ 创建测试分支 (test-YYYYMMDD-HHMMSS)
+   ├─ 提交更改
+   └─ 推送到远程
+
+# 3. 版本标记阶段
+   ├─ 创建 Git 标签 (vX.Y.Z-YYYYMMDD)
+   └─ 推送标签
+
+# 4. 报告生成阶段
+   └─ 生成 DEPLOYMENT_REPORT.md
+```
+
+### 使用选项
+
+```bash
+./deploy.sh              # 完整部署流程
+./deploy.sh --check      # 仅安全检查
+./deploy.sh --dry-run    # 模拟执行（不实际推送）
+./deploy.sh --tag v1.0.0 # 创建指定版本的标签
+```
 
 ## 📊 部署报告示例
-
-部署完成后会生成 `DEPLOYMENT_REPORT_*.md`：
 
 ```markdown
 # 部署报告
 
-**部署时间**: 2026-03-12 08:49:35 AEDT
-**测试分支**: `test-20260312-084935`
-**Git 标签**: `v20260312-084935`
-
 ## 基本信息
+- **部署时间**: 2026-03-12 09:30:15
+- **项目**: nanobot-custom
+- **仓库**: https://github.com/davincinewton/nanobot-custom
+- **分支**: main → test-20260312-093015
 
-| 项目 | 值 |
-|------|-----|
-| 提交哈希 | `a1b2c3d` |
-| 测试分支 | [test-20260312-084935](https://github.com/...) |
-| 标签 | [v20260312-084935](https://github.com/...) |
+## 安全检查结果
+✅ 敏感信息扫描: 通过
+✅ 文件完整性: 通过
+✅ .gitignore: 正确配置
+✅ Git 状态: 干净
 
-## 分发包信息
+## Git 操作
+- **提交**: abc1234 ("部署：更新文档和依赖")
+- **分支**: test-20260312-093015
+- **标签**: v1.1.0-20260312
 
-| 项目 | 值 |
-|------|-----|
-| 文件名 | nanobot-custom-20260312-084935.tar.gz |
-| 文件大小 | 347M |
-| 远程存储 | 本地存档（超过 100MB，未推送到 GitHub） |
+## 部署状态
+✅ 成功
+
+## 警告
+无
+
+## 下一步
+1. 验证测试分支内容
+2. 合并到 main（如需要）
+3. 更新版本文档
 ```
 
-## 🔒 安全特性
+## 🔐 安全最佳实践
 
-- ✅ 自动排除敏感文件（`config.json`, `.env`）
-- ✅ 分发包不包含 Git 历史
-- ✅ 每个部署创建独立测试分支
-- ✅ 完整的部署报告记录
-
-## 📝 典型使用场景
-
-### 场景 1: 每次代码修改后部署
+### 1.  never 提交敏感信息
 
 ```bash
-# 1. 修改代码
-# ... 编辑文件 ...
+# ❌ 错误示例
+echo "GITHUB_TOKEN=ghp_xxx" >> config.json
+git add config.json  # 不要提交！
 
-# 2. 运行部署
-./custom-skills/project-deploy/deploy.sh
-
-# 3. 自动创建测试分支并推送
-# 4. 从 backups/ 目录下载分发包测试
+# ✅ 正确示例
+echo "GITHUB_TOKEN=\${GITHUB_TOKEN}" > .env.example
+echo "config.json" >> .gitignore
+echo ".env" >> .gitignore
 ```
 
-### 场景 2: 版本发布
+### 2. 使用环境变量
 
 ```bash
-# 1. 运行部署
-./custom-skills/project-deploy/deploy.sh
+# .env.example (可以提交)
+GITHUB_TOKEN=your_token_here
+TELEGRAM_BOT_TOKEN=your_bot_token_here
 
-# 2. 验证测试分支
-git checkout test-20260312-084935
-
-# 3. 测试通过后合并到 main
-git checkout main
-git merge test-20260312-084935
+# .env (添加到 .gitignore)
+GITHUB_TOKEN=ghp_实际令牌
+TELEGRAM_BOT_TOKEN=实际令牌
 ```
 
-### 场景 3: 回滚到历史版本
+### 3. 定期扫描
 
 ```bash
-# 1. 查看可用版本
-./custom-skills/project-deploy/rollback.sh --list-tags
+# 每次部署前运行
+./deploy.sh --check
 
-# 2. 回滚到指定标签
-./custom-skills/project-deploy/rollback.sh --to-tag v20260312-0830
-
-# 3. 或创建新分支继续开发
-git checkout -b recovery-20260312
+# 手动扫描
+grep -r "ghp_\|sk-" --include="*.py" --include="*.sh" .
 ```
 
-## 🛠️ 脚本位置
+### 4. 密钥轮换
+
+如果发现密钥可能泄露：
+1. 立即在 GitHub/Telegram 等平台撤销
+2. 生成新密钥
+3. 更新环境变量
+4. 执行 `./deploy.sh` 重新部署
+
+## 🛠️ 故障排除
+
+### 问题：安全检查失败
 
 ```
-custom-skills/project-deploy/
-├── deploy.sh          # 主部署脚本（推荐）
-├── create-backup.sh   # 仅创建分发包
-├── rollback.sh        # 回滚/管理工具
-└── SKILL.md          # 本文档
+❌ 发现敏感信息: ghp_xxx in config.json
 ```
 
-## ⚠️ 注意事项
+**解决方案**：
+```bash
+# 1. 删除或清理文件
+rm config.json
+# 或编辑移除敏感信息
 
-1. **确保已配置 Git**:
-   ```bash
-   git config --global user.name "Your Name"
-   git config --global user.email "your@email.com"
-   ```
+# 2. 重新运行检查
+./deploy.sh --check
 
-2. **确保已设置远程仓库**:
-   ```bash
-   git remote -v
-   # 应显示你的 GitHub 仓库地址
-   ```
+# 3. 如果已提交到 git，需要清理历史
+git filter-branch --force --index-filter \
+  "git rm --cached --ignore-unmatch config.json" \
+  --prune-empty --tag-name-filter cat -- --all
+```
 
-3. **分发包用途**:
-   - ✅ 发布分享
-   - ✅ 离线备份
-   - ✅ 测试验证
-   - ❌ 不是完整源码（不含 `.git/`）
+### 问题：文件太多无法推送
 
-4. **测试分支管理**:
-   - 每次部署都会创建新测试分支
-   - 测试后可选择合并或删除
-   - 使用 `rollback.sh` 管理分支
+```
+remote: error: GH013: Repository limit exceeded
+```
+
+**解决方案**：
+- 确保 `.gitignore` 正确配置
+- 清理大文件：`git clean -fdx`
+- 使用 `git filter-branch` 清理历史
+
+### 问题：权限错误
+
+```
+fatal: could not read Username for 'https://github.com'
+```
+
+**解决方案**：
+```bash
+# 使用 SSH 或配置凭证
+git remote set-url origin git@github.com:davincinewton/nanobot-custom.git
+# 或使用凭证缓存
+git config --global credential.helper store
+```
+
+## 📚 相关文件
+
+- `deploy.sh` - 自动化部署脚本
+- `DEPLOYMENT_REPORT.md` - 部署报告（自动生成）
+- `.gitignore` - Git 忽略规则
+- `SKILL.md` - 本文档
 
 ---
 
-**快速开始**:
-```bash
-cd /path/to/nanobot-custom
-./custom-skills/project-deploy/deploy.sh
-```
+**版本**: 2.0.0  
+**创建时间**: 2026-03-12  
+**更新**: 移除分发包，集成安全检查  
+**维护者**: nanobot team
