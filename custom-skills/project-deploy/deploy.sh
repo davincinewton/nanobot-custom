@@ -146,7 +146,7 @@ generate_report() {
     # 获取 Git 信息
     local commit_hash=$(git rev-parse HEAD)
     local commit_msg=$(git log -1 --pretty=%B)
-    local remote_url=$(git remote get-url origin)
+    local remote_url=$(git remote get-url origin | sed 's|https://github.com/||' | sed 's|\.git||')
     
     # 获取备份文件信息
     local backup_file=$(ls -t backups/nanobot-custom-*.tar.gz 2>/dev/null | head -1)
@@ -166,11 +166,10 @@ generate_report() {
 
 | 项目 | 值 |
 |------|-----|
-| 提交哈希 | \`${commit_hash:0:7}\` |
-| 提交信息 | ${commit_msg} |
-| 远程仓库 | ${remote_url} |
-| 测试分支 | [${TEST_BRANCH}](${remote_url}/tree/${TEST_BRANCH}) |
-| 标签 | [v${TIMESTAMP_DATE}-${TIMESTAMP_TIME}](${remote_url}/tree/v${TIMESTAMP_DATE}-${TIMESTAMP_TIME}) |
+| 提交哈希 | \`$commit_hash:0:7\` |
+| 提交信息 | $commit_msg |
+| 测试分支 | $TEST_BRANCH (在 GitHub 查看) |
+| 标签 | v${TIMESTAMP_DATE}-${TIMESTAMP_TIME} |
 
 ## 分发包信息
 
@@ -192,9 +191,9 @@ generate_report() {
 
 ## 快速访问
 
-- **查看测试分支**: \`git checkout ${TEST_BRANCH}\`
-- **下载分发包**: 从本地 \`backups/\` 目录获取
-- **回滚到当前版本**: \`git checkout v${TIMESTAMP_DATE}-${TIMESTAMP_TIME}\`
+- 查看测试分支：git checkout $TEST_BRANCH
+- 下载分发包：从本地 backups/ 目录获取
+- 回滚到当前版本：git checkout v${TIMESTAMP_DATE}-${TIMESTAMP_TIME}
 
 ## 注意事项
 
