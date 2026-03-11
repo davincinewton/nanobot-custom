@@ -51,6 +51,10 @@ logs/
 .env.local
 .env.*.local
 
+# Configuration (contains secrets)
+config.json
+secrets.json
+
 # Nanobot specific
 nanobot-env/
 *.log
