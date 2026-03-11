@@ -1,0 +1,27 @@
+name: ddgs
+description: DuckDuckGo search skill for web, news, images, and videos using the free ddgs Python library. No API key required.
+version: 1.0.0
+author: nanobot user
+homepage: https://github.com/deedy5/ddgs
+license: MIT
+tags:
+  - search
+  - news
+  - duckduckgo
+  - web-scraping
+  - free-api
+
+files:
+  - SKILL.md
+  - search_news.sh
+  - search_web.sh
+
+requirements:
+  - pip install ddgs
+
+usage: |
+  # News search (Australia)
+  ./search_news.sh "Australia news" au-en 8
+  
+  # Web search
+  ./search_web.sh "your query" 5

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Web Channel 测试</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        .test { margin: 10px 0; padding: 10px; background: #f0f0f0; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>nanobot Web Channel 测试</h1>
+    
+    <div class="test">
+        <h3>1. 健康检查</h3>
+        <button onclick="testHealth()">测试</button>
+        <div id="healthResult"></div>
+    </div>
+    
+    <div class="test">
+        <h3>2. 发送消息</h3>
+        <input type="text" id="message" placeholder="输入消息" style="width: 300px;">
+        <button onclick="testChat()">发送</button>
+        <div id="chatResult"></div>
+    </div>
+    
+    <div class="test">
+        <h3>3. 获取历史</h3>
+        <button onclick="testHistory()">获取</button>
+        <div id="historyResult"></div>
+    </div>
+    
+    <script>
+        async function testHealth() {
+            try {
+                const response = await fetch('/api/health');
+                const data = await response.json();
+                document.getElementById('healthResult').innerHTML = 
+                    `<span class="success">✅ ${JSON.stringify(data)}</span>`;
+            } catch (error) {
+                document.getElementById('healthResult').innerHTML = 
+                    `<span class="error">❌ ${error.message}</span>`;
+            }
+        }
+        
+        async function testChat() {
+            const message = document.getElementById('message').value;
+            if (!message) {
+                alert('请输入消息');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({message, user: '测试用户'})
+                });
+                const data = await response.json();
+                document.getElementById('chatResult').innerHTML = 
+                    `<span class="success">✅ ${JSON.stringify(data)}</span>`;
+            } catch (error) {
+                document.getElementById('chatResult').innerHTML = 
+                    `<span class="error">❌ ${error.message}</span>`;
+            }
+        }
+        
+        async function testHistory() {
+            try {
+                const response = await fetch('/api/history');
+                const data = await response.json();
+                document.getElementById('historyResult').innerHTML = 
+                    `<span class="success">✅ 共 ${data.count} 条消息</span>`;
+            } catch (error) {
+                document.getElementById('historyResult').innerHTML = 
+                    `<span class="error">❌ ${error.message}</span>`;
+            }
+        }
+    </script>
+</body>
+</html>

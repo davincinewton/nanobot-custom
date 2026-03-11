@@ -1,0 +1,20 @@
+[Unit]
+Description=nanobot Gateway Service
+After=network.target
+
+[Service]
+Type=simple
+User=yl
+WorkingDirectory=/home/yl/nanobot
+Environment="PATH=/home/yl/nanobot/nanobot-env/bin:/usr/local/bin:/usr/bin"
+Environment="VIRTUAL_ENV=/home/yl/nanobot/nanobot-env"
+ExecStart=/home/yl/nanobot/nanobot-env/bin/nanobot gateway --port 18790
+Restart=always
+RestartSec=10
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
