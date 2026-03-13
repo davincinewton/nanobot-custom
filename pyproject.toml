@@ -47,6 +47,12 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+web = [
+    "Flask>=3.0.0,<4.0.0",
+    "Flask-CORS>=4.0.0,<5.0.0",
+    "Flask-SocketIO>=5.3.0,<6.0.0",
+    "eventlet>=0.35.0",
+]
 matrix = [
     "matrix-nio[e2e]>=0.25.2",
     "mistune>=3.0.0,<4.0.0",

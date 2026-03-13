@@ -31,8 +31,14 @@ class OutboundMessage:
     channel: str
     chat_id: str
     content: str
+    session_key: str | None = None  # Session identifier for routing
     reply_to: str | None = None
     media: list[str] = field(default_factory=list)
     metadata: dict[str, Any] = field(default_factory=dict)
+
+    @property
+    def _session_key(self) -> str:
+        """Return session_key or fallback to channel:chat_id."""
+        return self.session_key or f"{self.channel}:{self.chat_id}"
 
 

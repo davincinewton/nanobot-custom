@@ -200,6 +200,17 @@ class QQConfig(Base):
     )  # Allowed user openids (empty = public access)
 
 
+class WebConfig(Base):
+    """Web channel configuration with WebSocket support."""
+
+    enabled: bool = False
+    host: str = "0.0.0.0"  # Bind address (0.0.0.0 for LAN access)
+    port: int = 5000
+    allow_from: list[str] = Field(default_factory=list)  # Allowed IPs/user IDs
+    cors_origins: list[str] = Field(default_factory=lambda: ["*"])
+    template_dir: str = ""  # Optional custom template directory
+    static_dir: str = ""  # Optional custom static directory
+    session_timeout: int = 3600  # Session timeout in seconds
 
 
 class ChannelsConfig(Base):
@@ -207,6 +218,7 @@ class ChannelsConfig(Base):
 
     send_progress: bool = True  # stream agent's text progress to the channel
     send_tool_hints: bool = False  # stream tool-call hints (e.g. read_file("…"))
+    web: WebConfig = Field(default_factory=WebConfig)  # Web channel config
     whatsapp: WhatsAppConfig = Field(default_factory=WhatsAppConfig)
     telegram: TelegramConfig = Field(default_factory=TelegramConfig)
     discord: DiscordConfig = Field(default_factory=DiscordConfig)
@@ -230,7 +242,7 @@ class AgentDefaults(Base):
     max_tokens: int = 8192
     temperature: float = 0.1
     max_tool_iterations: int = 40
-    memory_window: int = 100
+    memory_window: int = 50  # Consolidate memory every 50 messages
     reasoning_effort: str | None = None  # low / medium / high — enables LLM thinking mode
 
 
